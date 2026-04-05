@@ -59,6 +59,12 @@ def create_app():
 
 
 # ── Run directly ──────────────────────────────────────────────
+# if __name__ == '__main__':
+#     app = create_app()
+#     app.run(debug=os.environ.get('FLASK_DEBUG', 'True') == 'True', port=5000)
+
+app = create_app()
+
+# Vercel needs this 'app' variable to be available
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=os.environ.get('FLASK_DEBUG', 'True') == 'True', port=5000)
+    app.run(debug=True)
