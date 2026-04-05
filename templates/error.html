@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} Error — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-inner">
+        <div class="error-code">{{ code }}</div>
+        <h1>{{ 'Page Not Found' if code == 404 else 'Server Error' }}</h1>
+        <p>{{ message }}</p>
+        <div class="error-actions">
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary">← Go Home</a>
+            <a href="{{ url_for('donations.browse') }}" class="btn btn-outline">Browse Donations</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

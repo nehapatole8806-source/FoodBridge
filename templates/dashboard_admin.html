@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <aside class="dash-sidebar">
+        <div class="dash-user-card">
+            <div class="dash-avatar admin">⚙️</div>
+            <strong>Admin Panel</strong>
+            <span class="badge badge-admin">ADMIN</span>
+        </div>
+        <nav class="dash-nav">
+            <a href="#users-section"     class="dash-nav-item active">👥 Users</a>
+            <a href="#donations-section" class="dash-nav-item">🍱 Donations</a>
+            <a href="#requests-section"  class="dash-nav-item">📋 Requests</a>
+            <a href="{{ url_for('donations.browse') }}" class="dash-nav-item">🔍 Browse</a>
+            <a href="{{ url_for('auth.logout') }}"      class="dash-nav-item danger">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="dash-main">
+
+        <!-- Overview Stats -->
+        <div class="dash-stats">
+            {% set donors = users|selectattr('role','eq','donor')|list|length %}
+            {% set ngos   = users|selectattr('role','eq','ngo')|list|length %}
+            {% set avail  = donations|selectattr('status','eq','available')|list|length %}
+            {% set claimed = donations|selectattr('status','eq','claimed')|list|length %}
+            <div class="dash-stat"><strong>{{ donors }}</strong><span>Donors</span></div>
+            <div class="dash-stat"><strong>{{ ngos }}</strong><span>NGOs</span></div>
+            <div class="dash-stat highlight"><strong>{{ avail }}</strong><span>Available</span></div>
+            <div class="dash-stat success"><strong>{{ claimed }}</strong><span>Claimed</span></div>
+        </div>
+
+        <!-- ── Users ─────────────────────────────────────────── -->
+        <section id="users-section" class="dash-section">
+            <h2>👥 All Users ({{ users|length }})</h2>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Name</th><th>Email</th><th>Role</th><th>City</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr class="{{ 'row-muted' if not u.is_active }}">
+                            <td>{{ u.name }}</td>
+                            <td>{{ u.email }}</td>
+                            <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+                            <td>{{ u.city or '—' }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="status-pill status-available">Active</span>
+                                {% else %}
+                                    <span class="status-pill status-expired">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-sm">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
+                            <td>
+                                {% if u.role != 'admin' %}
+                                <form method="POST" action="{{ url_for('main.admin_toggle_user', user_id=u.id) }}">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-danger' if u.is_active else 'btn-primary' }}">
+                                        {{ 'Deactivate' if u.is_active else 'Activate' }}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ── Donations ─────────────────────────────────────── -->
+        <section id="donations-section" class="dash-section">
+            <h2>🍱 All Donations ({{ donations|length }})</h2>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Title</th><th>Donor</th><th>Type</th><th>Qty</th><th>City</th><th>Expiry</th><th>Status</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for d in donations %}
+                        <tr>
+                            <td><a href="{{ url_for('donations.detail', donation_id=d.id) }}">{{ d.title[:35] }}{% if d.title|length > 35 %}…{% endif %}</a></td>
+                            <td>{{ d.donor_name }}</td>
+                            <td><span class="food-type-badge ft-{{ d.food_type }} sm">{{ d.food_type }}</span></td>
+                            <td>{{ d.quantity }} {{ d.quantity_unit }}</td>
+                            <td>{{ d.city or '—' }}</td>
+                            <td class="text-sm">{{ d.expiry_time.strftime('%d %b, %H:%M') if d.expiry_time else '—' }}</td>
+                            <td><span class="status-pill status-{{ d.status }}">{{ d.status }}</span></td>
+                            <td>
+                                <form method="POST" action="{{ url_for('main.admin_delete_donation', donation_id=d.id) }}"
+                                      onsubmit="return confirm('Permanently delete this donation?')">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ── Requests ──────────────────────────────────────── -->
+        <section id="requests-section" class="dash-section">
+            <h2>📋 All Requests ({{ all_requests|length }})</h2>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Donation</th><th>NGO</th><th>Donor</th><th>Status</th><th>Requested</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for r in all_requests %}
+                        <tr>
+                            <td>{{ r.donation_title[:35] }}{% if r.donation_title|length > 35 %}…{% endif %}</td>
+                            <td>{{ r.ngo_name }}</td>
+                            <td>{{ r.donor_name }}</td>
+                            <td><span class="status-pill status-{{ r.status }}">{{ r.status }}</span></td>
+                            <td class="text-sm">{{ r.created_at.strftime('%d %b %Y') if r.created_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+{% endblock %}

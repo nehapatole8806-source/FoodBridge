@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Login — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-side">
+        <div class="auth-side-content">
+            <span class="logo-icon large">🌾</span>
+            <h2>Welcome back to FoodBridge</h2>
+            <p>Every meal shared counts. Log in to continue your impact.</p>
+            <div class="auth-quotes">
+                <blockquote>"Waste less. Share more. Feed all."</blockquote>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-form-side">
+        <div class="auth-box">
+            <h1>Sign In</h1>
+            <p class="auth-sub">Don't have an account? <a href="{{ url_for('auth.signup') }}">Join free →</a></p>
+
+            <form method="POST" action="{{ url_for('auth.login') }}" class="form" novalidate>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           placeholder="you@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-with-toggle">
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Sign In →
+                </button>
+            </form>
+
+            <div class="auth-divider"><span>or try demo accounts</span></div>
+            <div class="demo-accounts">
+                <button class="btn btn-sm btn-outline" onclick="fillDemo('donor@demo.com','demo123')">
+                    🤲 Donor Demo
+                </button>
+                <button class="btn btn-sm btn-outline" onclick="fillDemo('ngo@demo.com','demo123')">
+                    🏢 NGO Demo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+function fillDemo(email, pw) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pw;
+}
+</script>
+{% endblock %}

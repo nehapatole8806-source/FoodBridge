@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Sign Up — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-side">
+        <div class="auth-side-content">
+            <span class="logo-icon large">🌾</span>
+            <h2>Join the FoodBridge Community</h2>
+            <p>Whether you have food to give or communities to feed — this is your platform.</p>
+            <ul class="auth-perks">
+                <li>✓ Free to join, always</li>
+                <li>✓ Connect with local donors & NGOs</li>
+                <li>✓ Real-time donation tracking</li>
+                <li>✓ Make a measurable impact</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="auth-form-side">
+        <div class="auth-box">
+            <h1>Create Account</h1>
+            <p class="auth-sub">Already have one? <a href="{{ url_for('auth.login') }}">Sign in →</a></p>
+
+            <form method="POST" action="{{ url_for('auth.signup') }}" class="form" novalidate>
+
+                <!-- Role Selection -->
+                <div class="form-group">
+                    <label>I am a…</label>
+                    <div class="role-selector">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="donor"
+                                   {% if form.get('role','donor') == 'donor' %}checked{% endif %}>
+                            <div class="role-card">
+                                <span>🤲</span>
+                                <strong>Donor</strong>
+                                <small>I have food to share</small>
+                            </div>
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="ngo"
+                                   {% if form.get('role') == 'ngo' %}checked{% endif %}>
+                            <div class="role-card">
+                                <span>🏢</span>
+                                <strong>NGO / Receiver</strong>
+                                <small>We distribute food</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Basic Info -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" class="form-control"
+                               value="{{ form.get('name','') }}" placeholder="Jane Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" name="phone" class="form-control"
+                               value="{{ form.get('phone','') }}" placeholder="+91 9876543210">
+                    </div>
+                </div>
+
+                <!-- NGO-only field -->
+                <div class="form-group ngo-only" id="orgField">
+                    <label for="organization_name">Organization Name *</label>
+                    <input type="text" id="organization_name" name="organization_name" class="form-control"
+                           value="{{ form.get('organization_name','') }}" placeholder="Helping Hands NGO">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           value="{{ form.get('email','') }}" placeholder="you@example.com" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" class="form-control"
+                               value="{{ form.get('city','') }}" placeholder="Mumbai">
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state" name="state" class="form-control"
+                               value="{{ form.get('state','') }}" placeholder="Maharashtra">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <div class="input-with-toggle">
+                            <input type="password" id="password" name="password" class="form-control"
+                                   placeholder="Min 6 characters" required>
+                            <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password *</label>
+                        <input type="password" id="confirm_password" name="confirm_password"
+                               class="form-control" placeholder="Repeat password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Create My Account →
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show/hide org field based on role selection
+function updateOrgVisibility() {
+    const ngo = document.querySelector('input[name="role"][value="ngo"]').checked;
+    document.getElementById('orgField').style.display = ngo ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateOrgVisibility));
+updateOrgVisibility();
+
+function togglePassword(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

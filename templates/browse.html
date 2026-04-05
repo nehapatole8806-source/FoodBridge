@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Browse Donations — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Available Food Donations</h1>
+        <p>Browse surplus food in your area and request what your community needs.</p>
+    </div>
+</div>
+
+<div class="container browse-layout">
+
+    <!-- ── Filters Sidebar ────────────────────────── -->
+    <aside class="filter-panel">
+        <h3>🔍 Filter</h3>
+        <form method="GET" action="{{ url_for('donations.browse') }}" class="filter-form">
+            <div class="form-group">
+                <label>Search</label>
+                <input type="text" name="q" class="form-control" placeholder="keyword..."
+                       value="{{ filters.q }}">
+            </div>
+            <div class="form-group">
+                <label>City</label>
+                <select name="city" class="form-control">
+                    <option value="">All Cities</option>
+                    {% for city in cities %}
+                        <option value="{{ city }}" {% if filters.city == city %}selected{% endif %}>
+                            {{ city }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Food Type</label>
+                <select name="food_type" class="form-control">
+                    <option value="">All Types</option>
+                    {% for ft in ['cooked', 'packaged', 'raw', 'beverages', 'other'] %}
+                        <option value="{{ ft }}" {% if filters.food_type == ft %}selected{% endif %}>
+                            {{ ft|capitalize }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
+            <a href="{{ url_for('donations.browse') }}" class="btn btn-outline btn-block mt-sm">Clear</a>
+        </form>
+
+        {% if current_user and current_user.role == 'donor' %}
+        <div class="filter-cta">
+            <p>Have food to share?</p>
+            <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-block">
+                + Post a Donation
+            </a>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- ── Results Grid ───────────────────────────── -->
+    <section class="browse-results">
+        <div class="results-header">
+            <span>{{ donations|length }} listing{{ 's' if donations|length != 1 }}</span>
+            {% if filters.city or filters.food_type or filters.q %}
+                <span class="active-filters">
+                    Filtered by:
+                    {% if filters.q %}<span class="filter-tag">🔍 "{{ filters.q }}"</span>{% endif %}
+                    {% if filters.city %}<span class="filter-tag">📍 {{ filters.city }}</span>{% endif %}
+                    {% if filters.food_type %}<span class="filter-tag">🍴 {{ filters.food_type }}</span>{% endif %}
+                </span>
+            {% endif %}
+        </div>
+
+        {% if donations %}
+            <div class="donations-grid">
+                {% for d in donations %}
+                <a href="{{ url_for('donations.detail', donation_id=d.id) }}" class="donation-card">
+                    <div class="dc-header">
+                        <span class="food-type-badge ft-{{ d.food_type }}">
+                            {% if d.food_type == 'cooked' %}🍲{% elif d.food_type == 'packaged' %}📦{% elif d.food_type == 'raw' %}🥕{% elif d.food_type == 'beverages' %}🥤{% else %}🍱{% endif %}
+                            {{ d.food_type|capitalize }}
+                        </span>
+                        <span class="dc-city">📍 {{ d.city or 'N/A' }}</span>
+                    </div>
+                    <h3 class="dc-title">{{ d.title }}</h3>
+                    {% if d.description %}
+                        <p class="dc-desc">{{ d.description[:90] }}{% if d.description|length > 90 %}…{% endif %}</p>
+                    {% endif %}
+                    <div class="dc-meta">
+                        <span>🍽️ {{ d.quantity }} {{ d.quantity_unit }}</span>
+                        <span>👤 {{ d.donor_name }}</span>
+                    </div>
+                    <div class="dc-footer">
+                        <span class="dc-expiry">
+                            ⏱ {{ d.expiry_time.strftime('%d %b %Y, %I:%M %p') if d.expiry_time else 'N/A' }}
+                        </span>
+                        <span class="status-pill status-{{ d.status }}">{{ d.status }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">🫙</span>
+                <h3>No donations found</h3>
+                <p>Try adjusting your filters, or check back later for new listings.</p>
+                {% if current_user and current_user.role == 'donor' %}
+                    <a href="{{ url_for('donations.create') }}" class="btn btn-primary">Be the First to Donate</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

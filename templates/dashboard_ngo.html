@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}NGO Dashboard — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <!-- ── Sidebar ───────────────────────────────────────────── -->
+    <aside class="dash-sidebar">
+        <div class="dash-user-card">
+            <div class="dash-avatar ngo">{{ current_user.name[0].upper() }}</div>
+            <strong>{{ current_user.name }}</strong>
+            <span class="badge badge-ngo">NGO</span>
+        </div>
+        <nav class="dash-nav">
+            <a href="#my-requests" class="dash-nav-item active">📋 My Requests</a>
+            <a href="{{ url_for('donations.browse') }}" class="dash-nav-item highlight">🔍 Browse Donations</a>
+            <a href="{{ url_for('main.profile') }}" class="dash-nav-item">👤 Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="dash-nav-item danger">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- ── Main Content ──────────────────────────────────────── -->
+    <main class="dash-main">
+
+        <!-- Quick Stats -->
+        <div class="dash-stats">
+            {% set total    = my_requests|length %}
+            {% set pending  = my_requests|selectattr('status','eq','pending')|list|length %}
+            {% set approved = my_requests|selectattr('status','eq','approved')|list|length %}
+            {% set done     = my_requests|selectattr('status','eq','completed')|list|length %}
+            <div class="dash-stat">
+                <strong>{{ total }}</strong><span>Total Requests</span>
+            </div>
+            <div class="dash-stat highlight">
+                <strong>{{ pending }}</strong><span>Pending</span>
+            </div>
+            <div class="dash-stat success">
+                <strong>{{ approved }}</strong><span>Approved</span>
+            </div>
+            <div class="dash-stat">
+                <strong>{{ done }}</strong><span>Completed</span>
+            </div>
+        </div>
+
+        <!-- CTA if no requests -->
+        {% if not my_requests %}
+        <div class="dash-cta-banner">
+            <div>
+                <h3>Start Requesting Food</h3>
+                <p>Browse available donations in your area and submit a request.</p>
+            </div>
+            <a href="{{ url_for('donations.browse') }}" class="btn btn-primary">Browse Donations →</a>
+        </div>
+        {% endif %}
+
+        <!-- ── My Requests ───────────────────────────────────── -->
+        <section id="my-requests" class="dash-section">
+            <div class="section-header">
+                <h2>My Requests</h2>
+                <a href="{{ url_for('donations.browse') }}" class="btn btn-outline btn-sm">+ Find More</a>
+            </div>
+
+            {% if my_requests %}
+            <div class="requests-list">
+                {% for req in my_requests %}
+                <div class="request-card {% if req.status == 'approved' %}approved{% elif req.status == 'pending' %}pending{% endif %}">
+                    <div class="req-header">
+                        <div>
+                            <strong>{{ req.donation_title }}</strong>
+                            <span class="food-type-badge ft-{{ req.food_type }} sm">{{ req.food_type }}</span>
+                        </div>
+                        <span class="status-pill status-{{ req.status }}">{{ req.status }}</span>
+                    </div>
+
+                    <div class="req-meta">
+                        <span>🍽️ {{ req.quantity }} {{ req.quantity_unit }}</span>
+                        <span>📍 {{ req.city or 'N/A' }}</span>
+                        <span>⏱ Expires {{ req.expiry_time.strftime('%d %b %Y') if req.expiry_time else 'N/A' }}</span>
+                        <span>👤 Donor: {{ req.donor_name }}</span>
+                        {% if req.status == 'approved' %}
+                            <span>📞 {{ req.donor_phone or 'No phone listed' }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if req.message %}
+                        <p class="req-message">Your message: "{{ req.message }}"</p>
+                    {% endif %}
+
+                    {% if req.pickup_time %}
+                        <p class="req-pickup">🕐 Requested pickup: {{ req.pickup_time.strftime('%d %b %Y, %I:%M %p') }}</p>
+                    {% endif %}
+
+                    {% if req.status == 'approved' %}
+                        <div class="req-approved-banner">
+                            ✅ Approved! Coordinate pickup with {{ req.donor_name }}.
+                            {% if req.donor_phone %} Call: <strong>{{ req.donor_phone }}</strong>{% endif %}
+                        </div>
+                        <form method="POST" action="{{ url_for('requests.complete', request_id=req.id) }}" style="margin-top:0.75rem;">
+                            <button type="submit" class="btn btn-success btn-sm"
+                                    onclick="return confirm('Confirm you have picked up this food?')">
+                                ✓ Mark as Picked Up
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <p class="text-sm text-muted" style="margin-top:0.5rem;">
+                        Requested on {{ req.created_at.strftime('%d %b %Y') if req.created_at else '' }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state sm">
+                <span class="empty-icon">📭</span>
+                <h3>No requests yet</h3>
+                <p>Browse available donations and submit your first request.</p>
+                <a href="{{ url_for('donations.browse') }}" class="btn btn-primary">Browse Now</a>
+            </div>
+            {% endif %}
+        </section>
+
+    </main>
+</div>
+{% endblock %}

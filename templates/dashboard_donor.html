@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Donor Dashboard — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <!-- ── Sidebar ───────────────────────────────────────────── -->
+    <aside class="dash-sidebar">
+        <div class="dash-user-card">
+            <div class="dash-avatar">{{ current_user.name[0].upper() }}</div>
+            <strong>{{ current_user.name }}</strong>
+            <span class="badge badge-donor">DONOR</span>
+        </div>
+        <nav class="dash-nav">
+            <a href="#my-donations" class="dash-nav-item active">🍱 My Donations</a>
+            <a href="#requests" class="dash-nav-item">📬 Incoming Requests</a>
+            <a href="{{ url_for('donations.create') }}" class="dash-nav-item highlight">+ Post New Donation</a>
+            <a href="{{ url_for('main.profile') }}" class="dash-nav-item">👤 Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="dash-nav-item danger">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- ── Main Content ──────────────────────────────────────── -->
+    <main class="dash-main">
+
+        <!-- Quick Stats -->
+        <div class="dash-stats">
+            {% set total = donations|length %}
+            {% set available = donations|selectattr('status','eq','available')|list|length %}
+            {% set claimed   = donations|selectattr('status','eq','claimed')|list|length %}
+            {% set pending_req = incoming_requests|selectattr('status','eq','pending')|list|length %}
+            <div class="dash-stat">
+                <strong>{{ total }}</strong><span>Total Donations</span>
+            </div>
+            <div class="dash-stat">
+                <strong>{{ available }}</strong><span>Available</span>
+            </div>
+            <div class="dash-stat">
+                <strong>{{ claimed }}</strong><span>Claimed</span>
+            </div>
+            <div class="dash-stat highlight">
+                <strong>{{ pending_req }}</strong><span>Pending Requests</span>
+            </div>
+        </div>
+
+        <!-- ── My Donations ──────────────────────────────────── -->
+        <section id="my-donations" class="dash-section">
+            <div class="section-header">
+                <h2>My Donations</h2>
+                <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-sm">+ New</a>
+            </div>
+
+            {% if donations %}
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>City</th>
+                            <th>Expires</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in donations %}
+                        <tr>
+                            <td><a href="{{ url_for('donations.detail', donation_id=d.id) }}">{{ d.title[:40] }}{% if d.title|length > 40 %}…{% endif %}</a></td>
+                            <td><span class="food-type-badge ft-{{ d.food_type }} sm">{{ d.food_type }}</span></td>
+                            <td>{{ d.quantity }} {{ d.quantity_unit }}</td>
+                            <td>{{ d.city or '—' }}</td>
+                            <td class="text-sm">{{ d.expiry_time.strftime('%d %b, %H:%M') if d.expiry_time else '—' }}</td>
+                            <td><span class="status-pill status-{{ d.status }}">{{ d.status }}</span></td>
+                            <td>
+                                {% if d.status == 'available' %}
+                                    <a href="{{ url_for('donations.edit', donation_id=d.id) }}" class="btn-icon" title="Edit">✏️</a>
+                                    <form method="POST" action="{{ url_for('donations.cancel', donation_id=d.id) }}" style="display:inline"
+                                          onsubmit="return confirm('Cancel this donation?')">
+                                        <button type="submit" class="btn-icon" title="Cancel">✕</button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted text-sm">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state sm">
+                <span class="empty-icon">🫙</span>
+                <h3>No donations yet</h3>
+                <p>Start by posting your first food donation.</p>
+                <a href="{{ url_for('donations.create') }}" class="btn btn-primary">Post a Donation</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- ── Incoming Requests ─────────────────────────────── -->
+        <section id="requests" class="dash-section">
+            <h2>📬 Incoming Requests</h2>
+
+            {% if incoming_requests %}
+            <div class="requests-list">
+                {% for req in incoming_requests %}
+                <div class="request-card {% if req.status == 'pending' %}pending{% endif %}">
+                    <div class="req-header">
+                        <div>
+                            <strong>{{ req.ngo_name }}</strong>
+                            {% if req.organization_name %}
+                                <span class="text-muted"> — {{ req.organization_name }}</span>
+                            {% endif %}
+                        </div>
+                        <span class="status-pill status-{{ req.status }}">{{ req.status }}</span>
+                    </div>
+                    <p class="req-donation-title">For: <em>{{ req.donation_title }}</em></p>
+                    {% if req.message %}
+                        <p class="req-message">"{{ req.message }}"</p>
+                    {% endif %}
+                    <div class="req-meta">
+                        {% if req.pickup_time %}
+                            <span>🕐 Preferred pickup: {{ req.pickup_time.strftime('%d %b %Y, %I:%M %p') }}</span>
+                        {% endif %}
+                        <span>📞 {{ req.ngo_phone or 'No phone' }}</span>
+                        <span>✉️ {{ req.ngo_email }}</span>
+                        <span class="text-sm text-muted">Requested {{ req.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+
+                    {% if req.status == 'pending' %}
+                    <div class="req-actions">
+                        <form method="POST" action="{{ url_for('requests.approve', request_id=req.id) }}" style="display:inline">
+                            <button type="submit" class="btn btn-primary btn-sm"
+                                    onclick="return confirm('Approve this request? Other pending requests will be rejected.')">
+                                ✓ Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('requests.reject', request_id=req.id) }}" style="display:inline">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Reject this request?')">
+                                ✕ Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state sm">
+                <span class="empty-icon">📭</span>
+                <h3>No requests yet</h3>
+                <p>When an NGO requests your donation, it'll appear here.</p>
+            </div>
+            {% endif %}
+        </section>
+
+    </main>
+</div>
+{% endblock %}

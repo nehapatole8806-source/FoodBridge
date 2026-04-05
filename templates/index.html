@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}FoodBridge — Share Food, Spread Hope{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="hero-blob blob-1"></div>
+        <div class="hero-blob blob-2"></div>
+    </div>
+    <div class="hero-content">
+        <span class="hero-badge">🌍 Fighting Food Waste Together</span>
+        <h1 class="hero-title">
+            Turn Surplus<br>
+            <em>Into Sustenance</em>
+        </h1>
+        <p class="hero-sub">
+            FoodBridge connects food donors with NGOs and communities in need.
+            Every meal shared is a step toward zero hunger.
+        </p>
+        <div class="hero-actions">
+            {% if current_user %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">
+                    Go to Dashboard →
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg">
+                    Get Started Free
+                </a>
+                <a href="{{ url_for('donations.browse') }}" class="btn btn-outline btn-lg">
+                    Browse Donations
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="hero-card card-float">
+            <span class="card-emoji">🥗</span>
+            <div>
+                <strong>Fresh Salads Available</strong>
+                <span>Mumbai · Expires in 3h</span>
+            </div>
+        </div>
+        <div class="hero-card card-float delay-1">
+            <span class="card-emoji">🍱</span>
+            <div>
+                <strong>50 Meal Boxes</strong>
+                <span>Pune · Claimed ✓</span>
+            </div>
+        </div>
+        <div class="hero-card card-float delay-2">
+            <span class="card-emoji">🧀</span>
+            <div>
+                <strong>Dairy Products</strong>
+                <span>Delhi · 2 requests</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Stats ────────────────────────────────────────────────── -->
+<section class="stats-bar">
+    <div class="stat-item">
+        <strong>{{ stats.total_donors or 0 }}</strong>
+        <span>Food Donors</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+        <strong>{{ stats.total_ngos or 0 }}</strong>
+        <span>NGO Partners</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+        <strong>{{ stats.total_donations or 0 }}</strong>
+        <span>Donations Posted</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+        <strong>{{ stats.claimed_donations or 0 }}</strong>
+        <span>Meals Delivered</span>
+    </div>
+</section>
+
+<!-- ── How It Works ─────────────────────────────────────────── -->
+<section class="section how-it-works">
+    <div class="container">
+        <div class="section-label">Simple Process</div>
+        <h2 class="section-title">How FoodBridge Works</h2>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <div class="step-icon">📝</div>
+                <h3>Post a Donation</h3>
+                <p>Donors list surplus food with details — quantity, location, and expiry time.</p>
+            </div>
+            <div class="step-connector">→</div>
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <div class="step-icon">🔍</div>
+                <h3>NGOs Browse</h3>
+                <p>Registered NGOs search by city or food type and find available listings.</p>
+            </div>
+            <div class="step-connector">→</div>
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <div class="step-icon">🤝</div>
+                <h3>Claim & Pickup</h3>
+                <p>NGO submits a request; donor approves and coordinates a pickup time.</p>
+            </div>
+            <div class="step-connector">→</div>
+            <div class="step-card">
+                <div class="step-number">04</div>
+                <div class="step-icon">❤️</div>
+                <h3>Feed Communities</h3>
+                <p>Food reaches those who need it. Track impact on your dashboard.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Recent Donations ─────────────────────────────────────── -->
+{% if recent_donations %}
+<section class="section recent-donations">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <div class="section-label">Fresh Listings</div>
+                <h2 class="section-title">Available Now</h2>
+            </div>
+            <a href="{{ url_for('donations.browse') }}" class="btn btn-outline">See All →</a>
+        </div>
+
+        <div class="donations-grid">
+            {% for d in recent_donations %}
+            <a href="{{ url_for('donations.detail', donation_id=d.id) }}" class="donation-card">
+                <div class="dc-header">
+                    <span class="food-type-badge ft-{{ d.food_type }}">{{ d.food_type }}</span>
+                    <span class="dc-city">📍 {{ d.city or 'N/A' }}</span>
+                </div>
+                <h3 class="dc-title">{{ d.title }}</h3>
+                <div class="dc-meta">
+                    <span>🍽️ {{ d.quantity }} {{ d.quantity_unit }}</span>
+                    <span>👤 {{ d.donor_name }}</span>
+                </div>
+                <div class="dc-footer">
+                    <span class="dc-expiry">⏱ Expires {{ d.expiry_time.strftime('%d %b, %I:%M %p') if d.expiry_time else 'N/A' }}</span>
+                    <span class="status-dot status-{{ d.status }}"></span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ── CTA Banner ───────────────────────────────────────────── -->
+<section class="cta-banner">
+    <div class="container">
+        <div class="cta-inner">
+            <div>
+                <h2>Ready to Make a Difference?</h2>
+                <p>Join hundreds of donors and NGOs building a hunger-free community.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="{{ url_for('auth.signup') }}?role=donor" class="btn btn-white">
+                    🤲 I Want to Donate
+                </a>
+                <a href="{{ url_for('auth.signup') }}?role=ngo" class="btn btn-outline-white">
+                    🏢 Register as NGO
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

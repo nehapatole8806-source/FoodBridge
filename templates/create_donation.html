@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if editing else 'Post a' }} Donation — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>{{ '✏️ Edit Donation' if editing else '🤲 Post a Food Donation' }}</h1>
+        <p>{{ 'Update your listing details below.' if editing else 'Fill in the details so NGOs can find and claim your surplus food.' }}</p>
+    </div>
+</div>
+
+<div class="container form-page">
+    <div class="form-card">
+        <form method="POST"
+              action="{{ url_for('donations.edit', donation_id=form.id) if editing else url_for('donations.create') }}"
+              class="form" novalidate>
+
+            <!-- ── Basic Info ──────────────────────────────── -->
+            <div class="form-section">
+                <h3>📋 Basic Information</h3>
+                <div class="form-group">
+                    <label for="title">Donation Title *</label>
+                    <input type="text" id="title" name="title" class="form-control"
+                           value="{{ form.get('title','') if form else '' }}"
+                           placeholder="e.g. Freshly cooked biryani for 30 people" required maxlength="200">
+                    <small>Be specific — a good title gets more responses.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="4"
+                              placeholder="Describe the food — ingredients, preparation method, packaging…">{{ form.get('description','') if form else '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="food_type">Food Type *</label>
+                        <select id="food_type" name="food_type" class="form-control" required>
+                            <option value="">Select type…</option>
+                            {% for ft in ['cooked', 'packaged', 'raw', 'beverages', 'other'] %}
+                                <option value="{{ ft }}"
+                                    {% if form and form.get('food_type') == ft %}selected{% endif %}>
+                                    {% if ft == 'cooked' %}🍲 Cooked Food
+                                    {% elif ft == 'packaged' %}📦 Packaged / Sealed
+                                    {% elif ft == 'raw' %}🥕 Raw Ingredients
+                                    {% elif ft == 'beverages' %}🥤 Beverages
+                                    {% else %}🍱 Other{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="allergens">Allergens (if any)</label>
+                        <input type="text" id="allergens" name="allergens" class="form-control"
+                               value="{{ form.get('allergens','') if form else '' }}"
+                               placeholder="e.g. nuts, gluten, dairy">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Quantity ───────────────────────────────── -->
+            <div class="form-section">
+                <h3>🍽️ Quantity</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">Quantity *</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control"
+                               value="{{ form.get('quantity','') if form else '' }}"
+                               min="1" placeholder="e.g. 50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity_unit">Unit</label>
+                        <select id="quantity_unit" name="quantity_unit" class="form-control">
+                            {% for unit in ['servings', 'kg', 'liters', 'boxes', 'packets', 'pieces'] %}
+                                <option value="{{ unit }}"
+                                    {% if form and form.get('quantity_unit') == unit %}selected{% endif %}>
+                                    {{ unit|capitalize }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Location & Time ────────────────────────── -->
+            <div class="form-section">
+                <h3>📍 Location & Timing</h3>
+                <div class="form-group">
+                    <label for="location">Pickup Address *</label>
+                    <input type="text" id="location" name="location" class="form-control"
+                           value="{{ form.get('location','') if form else '' }}"
+                           placeholder="Full address for pickup" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" class="form-control"
+                               value="{{ form.get('city','') if form else '' }}" placeholder="Mumbai">
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state" name="state" class="form-control"
+                               value="{{ form.get('state','') if form else '' }}" placeholder="Maharashtra">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="expiry_time">Food Valid Until (Expiry) *</label>
+                    <input type="datetime-local" id="expiry_time" name="expiry_time" class="form-control"
+                           value="{{ form.get('expiry_time','') if form else '' }}" required>
+                    <small>Pick the latest time the food remains safe to consume.</small>
+                </div>
+            </div>
+
+            <!-- ── Pickup Instructions ────────────────────── -->
+            <div class="form-section">
+                <h3>📋 Pickup Instructions</h3>
+                <div class="form-group">
+                    <textarea id="pickup_instructions" name="pickup_instructions"
+                              class="form-control" rows="3"
+                              placeholder="e.g. Ring the bell at gate 2. Ask for Ravi. Available 10am–5pm.">{{ form.get('pickup_instructions','') if form else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- ── Submit ──────────────────────────────────── -->
+            <div class="form-actions">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    {{ '💾 Save Changes' if editing else '🚀 Post Donation' }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tips Panel -->
+    <aside class="form-tips">
+        <h3>💡 Tips for a Good Listing</h3>
+        <ul>
+            <li><strong>Be specific:</strong> Tell NGOs exactly what's available and how much.</li>
+            <li><strong>Set a realistic expiry:</strong> This helps NGOs plan pickups in time.</li>
+            <li><strong>Add allergen info:</strong> Important for communities with dietary restrictions.</li>
+            <li><strong>Clear pickup instructions:</strong> Save time for both parties.</li>
+        </ul>
+        <div class="tips-divider"></div>
+        <p>🔔 Once you post, registered NGOs will be able to see and request your donation.</p>
+    </aside>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set minimum datetime for expiry to 'now'
+document.getElementById('expiry_time').min = new Date().toISOString().slice(0, 16);
+</script>
+{% endblock %}
